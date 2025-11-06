@@ -1,0 +1,11 @@
+#map-container {
+  height: 100%;
+  width: 100%;
+  /* temporarily set the background color so we can tell where the map container is positioned */
+  background-color: black;
+}
+
+.shadow-top {
+  box-shadow: 0 -4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 -2px 4px -1px rgba(0, 0, 0, 0.06);
+}
