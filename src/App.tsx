@@ -1,39 +1,12 @@
 import { useState, useRef, useEffect } from 'react'
 import mapboxgl from 'mapbox-gl'
 import 'mapbox-gl/dist/mapbox-gl.css';
+import Navbar from './components/Navbar'
+import type { Event } from './types/general';
+import ContentController from './components/ContentController';
+import supabase from './services/service';
 
 const UNIVERSITY_CITY_UPENN = { lat: 39.9522, lng: -75.1932 };
-
-interface Event {
-  id: number;
-  name: string;
-  description: string;
-  location: {
-    lat: number;
-    lng: number;
-  };
-}
-
-const EVENTS: Event[] = [
-  {
-    id: 0,
-    name: 'Campus Tour',
-    description: 'A guided tour around the university campus.',
-    location: { lat: 39.9525, lng: -75.1930 },
-  },
-  {
-    id: 1,
-    name: 'Guest Lecture',
-    description: 'Lecture by a renowned professor in computer science.',
-    location: { lat: 39.9510, lng: -75.1920 },
-  },
-  {
-    id: 2,
-    name: 'Art Exhibition',
-    description: 'Exhibition showcasing student artwork.',
-    location: { lat: 39.9530, lng: -75.1940 },
-  },
-];
 
 function App() {
   const mapRef = useRef<mapboxgl.Map | null>(null);
@@ -47,10 +20,54 @@ function App() {
   const [isDragging, setIsDragging] = useState(false);
   const [startY, setStartY] = useState(0);
   const [startHeight, setStartHeight] = useState(0);
-  const [activeTab, setActiveTab] = useState<'map' | 'feed' | 'create'>('map');
+  const [activeTab, setActiveTab] = useState<string>('events');
+  const [user, setUser] = useState<any>(4);
+
+  const [events, setEvents] = useState<Event[]>([]);
 
   const COLLAPSED_HEIGHT = 180; 
   const EXPANDED_HEIGHT = 500;
+
+  useEffect(() => {
+  supabase
+  .from('events')
+  .select(`
+    id,
+    title,
+    description,
+    latitude,
+    longitude,
+    created_at,
+    host:host_id ( id, username ),
+    event_attendees (
+      user_id,
+      user:users ( id, username )
+    ),
+    event_requests (
+      user_id,
+      status,
+      user:users ( id, username )
+    )
+  `).then(({ data, error }) => {
+      if (error) {
+        console.error("Error fetching events:", error);
+      } else {
+        console.log("Fetched events:", data);
+
+        setEvents(data!.map((item) => ({
+          id: item.id,
+          name: item.title,
+          // @ts-ignore
+          user: item.host.username, 
+          description: item.description,
+          location: {
+            lat: item.latitude,
+            lng: item.longitude
+          }
+        })));
+      }
+    });
+  }, []);
 
   useEffect(() => {
     getUserLocation();
@@ -73,7 +90,18 @@ function App() {
       .setPopup(new mapboxgl.Popup({ offset: 25 }).setText('Your Location'))
       .addTo(mapRef.current);
 
-    EVENTS.forEach((event) => {
+    return () => mapRef.current?.remove();
+  }, [locationFetched, userLocation]);
+
+  useEffect(() => {
+    if (!mapRef.current) return;
+
+    // Remove old markers
+    Object.values(markersRef.current).forEach((marker: any) => marker.remove());
+    markersRef.current = {};
+
+    // Add new markers
+    events.forEach((event) => {
       const marker = new mapboxgl.Marker({ color: 'red' })
         .setLngLat([event.location.lng, event.location.lat])
         .setPopup(new mapboxgl.Popup({ offset: 25 }).setHTML(
@@ -90,17 +118,11 @@ function App() {
         setActiveEventId(event.id);
       });
     });
-
-    return () => {
-      if (mapRef.current) {
-        mapRef.current.remove();
-      }
-    };
-  }, [locationFetched, userLocation]);
+  }, [events]);
 
   useEffect(() => {
     if (activeEventId !== null && mapRef.current) {
-      const activeEvent = EVENTS.find(event => event.id === activeEventId);
+      const activeEvent = events.find(event => event.id === activeEventId);
       const marker = markersRef.current[activeEventId];
 
       Object.entries(markersRef.current).forEach(([id, m]) => {
@@ -119,7 +141,7 @@ function App() {
         marker.togglePopup();
       }
     }
-  }, [activeEventId]);
+  }, [activeEventId, events]);
 
   const getUserLocation = () => {
     if (navigator.geolocation) {
@@ -212,44 +234,18 @@ function App() {
         >
           <div className="w-12 h-1.5 bg-gray-300 rounded-full"></div>
         </div>
-        <ul 
-          className="overflow-y-auto p-4"
-          style={{ height: `${drawerHeight - 20}px` }}
-        >
-          {EVENTS.map((event) => (
-            <li 
-              key={event.id} 
-              className={`font-display mb-4 border-b pb-2 cursor-pointer transition-all hover:bg-gray-100 p-2 rounded ${
-                activeEventId === event.id ? 'bg-blue-100 border-blue-400 opacity-100' : 'opacity-50'
-              }`}
-              onClick={() => handleEventClick(event)}
-            >
-              <h3 className="font-semibold">{event.name}</h3>
-              <p className="text-sm">{event.description}</p>
-            </li>
-          ))}
-        </ul>
+        <div className={`overflow-y-auto p-4`} style={{ height: `${drawerHeight - 20}px` }}>
+          <ContentController 
+            activeTab={activeTab} 
+            setActiveTab={setActiveTab} 
+            events={events} 
+            activeEventId={activeEventId} 
+            handleEventClick={handleEventClick}
+            userId={user}
+          />
+        </div>
       </div>
-      <div id="navigation-buttons" className="absolute h-24 bottom-0 right-0 flex p-4 bg-white justify-between z-10 w-full">
-        <button 
-          className={`${activeTab == 'map' ? 'bg-blue-100' : 'bg-white'} hover:bg-blue-100 transition w-full`}
-          onClick={() => setActiveTab('map')}
-        >
-          Map
-        </button>
-        <button 
-          className={`${activeTab == 'feed' ? 'bg-blue-100' : 'bg-white'} hover:bg-blue-100 transition w-full`}
-          onClick={() => setActiveTab('feed')}
-        >
-          Feed
-        </button>
-        <button
-          className={`${activeTab == 'create' ? 'bg-blue-100' : 'bg-white'} hover:bg-blue-100 transition w-full`}
-          onClick={() => setActiveTab('create')}
-        >
-          Create
-        </button>
-      </div>
+      <Navbar setActiveTab={setActiveTab} activeTab={activeTab} />
     </div>
   );
 }
