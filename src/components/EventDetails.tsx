@@ -1,5 +1,6 @@
 import type {Event} from '../types/general';
 import supabase from '../services/service';
+import {useMemo} from 'react';
 
 interface EventDetailsProps {
   event: Event;
@@ -7,8 +8,9 @@ interface EventDetailsProps {
   userId: number;
 }
 
-
 const EventDetails = ({event, setActiveTab, userId}: EventDetailsProps) => {
+
+  const eventStatus = useMemo(() => event.requests.find(request => request.user.id === userId)?.status, [event, userId]);
   const requestToJoinEvent = async () => {
     const { data, error } = await supabase
       .from('event_requests')
@@ -40,13 +42,22 @@ const EventDetails = ({event, setActiveTab, userId}: EventDetailsProps) => {
       <div className="rounded-lg bg-blue-100 p-4">
         <p className="mb-2">{event.description}</p>
       </div>
-
-      <button 
-        className="bg-green-100 rounded-lg p-2 mt-2 cursor-pointer text-sm hover:bg-green-300 hover:scale-110 transition-all"
-        onClick={requestToJoinEvent}
-      >
-        Join Event
-      </button>
+      {
+        (eventStatus === 'accepted') ? (
+          <p className="mt-4 font-semibold text-green-600">You are attending this event.</p>
+        ) : (eventStatus === 'pending') ? (
+          <p className="mt-4 font-semibold text-yellow-600">Your request to join is pending.</p>
+        ) : (eventStatus === 'rejected') ? (
+          <p className="mt-4 font-semibold text-red-600">Your request to join was rejected.</p>
+        ) : (
+          <button 
+            className="mt-4 bg-green-500 text-white rounded-lg p-2 cursor-pointer hover:bg-green-600 hover:scale-105 transition-all"
+            onClick={requestToJoinEvent}
+          >
+            Request to Join Event
+          </button>
+        )
+      }
     </div>
   )
 }
