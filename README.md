@@ -2,12 +2,26 @@
 
 ## Running Instructions
 
+NOTE: Remember to include the given .env file for api key access
+
 ```bash
 # Install dependencies
 npm install
 # Start development server
 npm run dev
 ```
+
+To run the notification demo:
+```bash
+Point two browsers to the pennspur app.
+
+On one browser create a new account. On the other browser log in with the following credentials:
+Username: Dr. Smith
+Password: hashed_pw_2
+
+Then, you should request to join Dr. Smith's Guest Lecture from the new account. Then switch over to the other browser, and clear notifications until you see your account.
+```
+
 
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
