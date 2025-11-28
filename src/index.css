@@ -11,3 +11,18 @@ html, body, #root {
   height: 100%;
   margin: 0;
 }
+
+.mapboxgl-popup {
+  max-width: none !important;
+}
+
+.mapboxgl-popup-content {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important; /* your Tailwind p-3 handles padding */
+}
+
+.mapboxgl-popup-tip {
+  display: none !important; /* removes the arrow */
+}

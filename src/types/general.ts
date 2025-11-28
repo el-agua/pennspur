@@ -7,11 +7,14 @@ export interface Event {
     lat: number;
     lng: number;
   };
+  startTime: Date;
   requests: EventRequest[];
+  emoji?: string;
+  place?: string;
 }
 
 export interface Notification {
-  key: number;
+  key: string;
   component: React.ReactNode;
 }
 
@@ -19,6 +22,7 @@ export interface Notification {
 export interface EventRequest {
   status: 'pending' | 'accepted' | 'rejected';
   user: User;
+  event_id: number;
 }
 
 

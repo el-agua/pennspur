@@ -1,36 +1,64 @@
+import HomeIcon from '@mui/icons-material/Home';
+import MapIcon from '@mui/icons-material/Map';
+import AddCircleIcon from '@mui/icons-material/AddCircle';
+import PersonIcon from '@mui/icons-material/Person';
+import { useState, useEffect } from 'react';
+import { Link, useLocation } from 'react-router'; // ✅ must be react-router-dom
 
 interface NavButtonProps {
-  setActiveTab: (arg0: string) => void;
   activeTab: string;
   id: string;
   name: string;
+  icon: React.ReactNode;
+  link: string;
 }
 
-interface NavbarProps {
-  setActiveTab: (arg0: string) => void;
-  activeTab: string;
-}
+const NavButton = ({ activeTab, id, name, icon, link }: NavButtonProps) => {
+  const isActive = activeTab === id;
 
-const NavButton = ({setActiveTab, activeTab, id, name} : NavButtonProps) => {
   return (
-    <button 
-      className={`${activeTab == id ? 'bg-blue-100' : 'bg-white'} hover:bg-blue-100 transition w-full font-display`}
-      onClick={() => setActiveTab(id)}
-    >
-      {name}
-    </button>
-  )
-}
+    <Link to={link}>
+      <button
+        className={`flex flex-col items-center justify-center gap-1 px-4 py-2 rounded-2xl transition-all duration-200 ${
+          isActive
+            ? 'text-blue-500 bg-white/70 backdrop-blur-md shadow-md scale-110'
+            : 'text-gray-600 hover:text-blue-500 hover:bg-white/20 hover:backdrop-blur-sm'
+        }`}
+      >
+        <span className={`transition-transform ${isActive ? 'scale-110' : ''}`}>
+          {icon}
+        </span>
+        <span className="text-xs font-medium">{name}</span>
+      </button>
+    </Link>
+  );
+};
 
-const Navbar = ({setActiveTab, activeTab}: NavbarProps) => {
+const Navbar = () => {
+  const location = useLocation();
+  const VALID_TABS = ['', 'map', 'create', 'profile'];
+  const [activeTab, setActiveTab] = useState<string>('');
+
+  useEffect(() => {
+    const path = location.pathname.split('/');
+    const pathString = path.length > 1 ? path[1] : '';
+    setActiveTab(pathString || '');
+  }, [location]);
+
   return (
-    <div id="navigation-buttons" className="absolute h-24 bottom-0 right-0 flex p-4 bg-white justify-between z-10 w-full">
-      <NavButton setActiveTab={setActiveTab} activeTab={activeTab} id="map" name="Map" /> 
-      <NavButton setActiveTab={setActiveTab} activeTab={activeTab} id="feed" name="Feed" />
-      <NavButton setActiveTab={setActiveTab} activeTab={activeTab} id="settings" name="Create" />
-      <NavButton setActiveTab={setActiveTab} activeTab={activeTab} id="profile" name="Profile" />
-    </div>
-  )
-}
+    VALID_TABS.includes(activeTab) && (
+      <div
+        id="navigation-buttons"
+        className="absolute bottom-4 left-4 right-4 h-20 flex items-center justify-around 
+                   px-6 bg-white/70 backdrop-blur-md rounded-3xl border border-white/30 shadow-lg z-50"
+      >
+        <NavButton activeTab={activeTab} id="" name="Feed" icon={<HomeIcon />} link="/" />
+        <NavButton activeTab={activeTab} id="map" name="Map" icon={<MapIcon />} link="/map" />
+        <NavButton activeTab={activeTab} id="create" name="Create" icon={<AddCircleIcon sx={{ fontSize: 32 }} />} link="/create" />
+        <NavButton activeTab={activeTab} id="profile" name="Profile" icon={<PersonIcon />} link="/profile" />
+      </div>
+    )
+  );
+};
 
 export default Navbar;

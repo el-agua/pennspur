@@ -1,38 +1,55 @@
 import { useState, useRef, useEffect } from 'react'
 import mapboxgl from 'mapbox-gl'
 import 'mapbox-gl/dist/mapbox-gl.css';
-import Navbar from '../components/Navbar'
 import type { Event } from '../types/general';
-import ContentController from '../components/ContentController';
-import supabase from '../services/service';
 import type {Notification} from '../types/general';
 import NotificationController from '../components/NotificationController';
 import type {User} from '../types/general';
+import supabase from '../services/service';
+import {useNavigate} from 'react-router';
+import EventCard from '../components/EventCard';
+import "../styles/mapStyles.css";
 
 const UNIVERSITY_CITY_UPENN = { lat: 39.9522, lng: -75.1932 };
 
-interface HomePageProps {
-  user: User; 
-}
 
-function HomePage({user}: HomePageProps) {
+function HomePage() {
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const markersRef = useRef<{ [key: number]: mapboxgl.Marker }>({});
-  const dragRef = useRef<HTMLDivElement | null>(null);
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number }>(UNIVERSITY_CITY_UPENN);
   const [locationFetched, setLocationFetched] = useState(false);
   const [activeEventId, setActiveEventId] = useState<number | null>(null);
-  const [drawerHeight, setDrawerHeight] = useState(192);
-  const [isDragging, setIsDragging] = useState(false);
-  const [startY, setStartY] = useState(0);
-  const [startHeight, setStartHeight] = useState(0);
-  const [activeTab, setActiveTab] = useState<string>('events');
-  const [events, setEvents] = useState<Event[]>([]);
   const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [searchQuery, setSearchQuery] = useState<string>('');
 
-  const COLLAPSED_HEIGHT = 180; 
-  const EXPANDED_HEIGHT = 500;
+  const [user, setUser] = useState<User>({id: -1, username: ''});
+  const [events, setEvents] = useState<Event[]>([]);
+
+  const navigate = useNavigate();
+
+
+
+  useEffect(() => {
+    const username = sessionStorage.getItem('auth_user');
+    const password = sessionStorage.getItem('auth_password');
+    if (!username || !password) {
+      navigate('/login');
+      return;
+    }
+    supabase.from('users').select('*').eq('username', username).eq('password', password).then(({data, error}) => {
+      if (data && data.length > 0) {
+        const tempUser = data[0];
+        setUser({id: tempUser.id, username: tempUser.username});
+      } 
+
+      if (error) {
+        alert('Error during authentication:' + error);
+        navigate('/login')
+      }
+    }
+    )
+  }, []);
 
   useEffect(() => {
   supabase
@@ -44,6 +61,8 @@ function HomePage({user}: HomePageProps) {
     latitude,
     longitude,
     created_at,
+    place,
+    emoji,
     host:host_id ( id, username ),
     event_attendees (
       user_id,
@@ -59,7 +78,6 @@ function HomePage({user}: HomePageProps) {
         console.error("Error fetching events:", error);
       } else {
         console.log("Fetched events:", data);
-
         setEvents(data!.map((item) => ({
           id: item.id,
           name: item.title,
@@ -70,7 +88,9 @@ function HomePage({user}: HomePageProps) {
             lat: item.latitude,
             lng: item.longitude
           },
-          requests: item.event_requests.map((req) => ({ 
+          startTime: new Date(item.created_at),
+          requests: item.event_requests.map((req) => ({
+            event_id: item.id,
             status: req.status,
             user: {
               // @ts-ignore
@@ -78,11 +98,14 @@ function HomePage({user}: HomePageProps) {
               // @ts-ignore
               username: req.user.username
             }
-          }))
+          })),
+          place: item.place,
+          emoji: item.emoji
         })));
       }
     });
   }, []);
+
 
   useEffect(() => {
     const notificationsTemp: Notification[] = [];
@@ -91,10 +114,10 @@ function HomePage({user}: HomePageProps) {
         const pendingRequests = event.requests.filter(request => request.status === 'pending');
         pendingRequests.forEach((request) => {
         const notif: Notification = Object.assign({}, {
-            key: event.id * 1000 + request.user.id,
+            key: `${event.id}-${request.user.id}`,
             component: (
-              <div>
-                <p className="font-semibold">{request.user.username} has requested to join your event "{event.name}".</p>
+              <div className="flex justify-center">
+                <p className="text-sm"><strong className="text-blue-400">{request.user.username}</strong> has requested to join <strong className="text-blue-400">{event.name}</strong></p>
               </div>
             )
           });
@@ -109,6 +132,7 @@ function HomePage({user}: HomePageProps) {
     getUserLocation();
   }, []);
 
+
   useEffect(() => {
     if (!locationFetched || mapRef.current) return;
 
@@ -121,12 +145,20 @@ function HomePage({user}: HomePageProps) {
       style: 'mapbox://styles/mapbox/streets-v12'
     });
 
-    new mapboxgl.Marker({ color: 'blue' })
+    const wrapper = document.createElement("div");
+    const el = document.createElement('div');
+    el.className = 'pulse-marker';
+    wrapper.appendChild(el);
+
+    new mapboxgl.Marker(el)
       .setLngLat([userLocation.lng, userLocation.lat])
       .setPopup(new mapboxgl.Popup({ offset: 25 }).setText('Your Location'))
       .addTo(mapRef.current);
 
-    return () => mapRef.current?.remove();
+    return () => {
+    mapRef.current?.remove()
+    mapRef.current = null;
+    };
   }, [locationFetched, userLocation]);
 
   useEffect(() => {
@@ -136,27 +168,43 @@ function HomePage({user}: HomePageProps) {
     Object.values(markersRef.current).forEach((marker: any) => marker.remove());
     markersRef.current = {};
 
+    const filteredEvents = events.filter(event =>
+      event.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      event.description.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+
+
+  const randomEmojis = ['🎉', '🎊', '🥳', '🎈', '🍾', '✨'];
+
     // Add new markers
-    events.forEach((event) => {
-      const marker = new mapboxgl.Marker({ color: 'red' })
-        .setLngLat([event.location.lng, event.location.lat])
-        .setPopup(new mapboxgl.Popup({ offset: 25 }).setHTML(
-          `<div class="p-2">
-            <h3 class="font-bold">${event.name}</h3>
-            <p class="text-sm">${event.description}</p>
-          </div>`
-        ))
-        .addTo(mapRef.current);
+    
+  filteredEvents.forEach((event) => {
+    const wrapper = document.createElement("div");
+    const el = document.createElement('div');
+    el.className = 'emoji-marker bounce rotate-2';
+    el.textContent = randomEmojis[event.id % randomEmojis.length];
+    wrapper.appendChild(el);
+  const marker = new mapboxgl.Marker({element: wrapper, anchor: 'center'})
+    .setLngLat([event.location.lng, event.location.lat])
+    .setPopup(
+      new mapboxgl.Popup({offset: 24}).setHTML(`
+        <div class="p-3 bg-white/70 backdrop-blur-md border border-white/30 shadow-lg rounded-xl">
+          <h3 class="text-base font-semibold text-gray-800">${event.name}</h3>
+          <p class="text-xs text-gray-600 mt-1">${event.description}</p>
+        </div>
+      `)
+    )
+    .addTo(mapRef.current);
 
-      markersRef.current[event.id] = marker;
+  markersRef.current[event.id] = marker;
 
-      marker.getElement().addEventListener('click', () => {
-        setActiveEventId(event.id);
-      });
-    });
-  }, [events]);
+  marker.getElement().addEventListener("click", () => {
+    setActiveEventId(event.id);
+  });
+});
+  }, [events, searchQuery]);
 
-  useEffect(() => {
+   useEffect(() => {
     if (activeEventId !== null && mapRef.current) {
       const activeEvent = events.find(event => event.id === activeEventId);
       const marker = markersRef.current[activeEventId];
@@ -199,90 +247,43 @@ function HomePage({user}: HomePageProps) {
     }
   };
 
-  const handleEventClick = (event: Event) => {
-    setActiveEventId(event.id);
-  };
 
-  const handleDragStart = (e: MouseEvent | TouchEvent) => {
-    setIsDragging(true);
-    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
-    setStartY(clientY);
-    setStartHeight(drawerHeight);
-  };
-
-  const handleDragMove = (e: MouseEvent | TouchEvent) => {
-    if (!isDragging) return;
-    
-    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
-    const deltaY = startY - clientY;
-    const newHeight = Math.max(COLLAPSED_HEIGHT, Math.min(EXPANDED_HEIGHT, startHeight + deltaY));
-    setDrawerHeight(newHeight);
-  };
-
-  const handleDragEnd = () => {
-    setIsDragging(false);
-    const midpoint = (COLLAPSED_HEIGHT + EXPANDED_HEIGHT) / 2;
-    if (drawerHeight < midpoint) {
-      setDrawerHeight(COLLAPSED_HEIGHT);
-    } else {
-      setDrawerHeight(EXPANDED_HEIGHT);
-    }
-  };
-
-  useEffect(() => {
-    if (isDragging) {
-      const moveHandler = (e: MouseEvent | TouchEvent) => handleDragMove(e);
-      const endHandler = () => handleDragEnd();
-      
-      window.addEventListener('mousemove', moveHandler);
-      window.addEventListener('mouseup', endHandler);
-      window.addEventListener('touchmove', moveHandler);
-      window.addEventListener('touchend', endHandler);
-      
-      return () => {
-        window.removeEventListener('mousemove', moveHandler);
-        window.removeEventListener('mouseup', endHandler);
-        window.removeEventListener('touchmove', moveHandler);
-        window.removeEventListener('touchend', endHandler);
-      };
-    }
-  }, [isDragging, startY, startHeight, drawerHeight]);
-
-  return (
+   return (
     <div id="container" className="h-screen w-screen relative">
       <NotificationController queue={notifications} />
-      <div className="absolute top-0 left-0 right-0 bg-white bg-opacity-90 p-2 text-sm z-10">
-        {userLocation ? `User Location: Latitude ${userLocation.lat.toFixed(4)}, Longitude ${userLocation.lng.toFixed(4)}` : "Fetching user location..."}
-      </div>
+      <div className="absolute top-12 w-full px-4 z-[60] pointer-events-none">
+  <input
+    placeholder="Search"
+    value={searchQuery}
+    onChange={(e) => setSearchQuery(e.target.value)}
+    className="
+      mt-8
+      w-full
+      pointer-events-auto
+      z-[99]
+      relative
+      rounded-xl
+      bg-white/80
+      backdrop-blur-md
+      shadow-lg
+      px-4
+      py-3
+      text-gray-800
+      placeholder-gray-400
+      border border-gray-200
+      focus:outline-none
+      focus:ring-2
+      focus:ring-blue-500
+      focus:border-transparent
+      transition
+    "
+  />
+</div>
+      
       <div id="map-container" className="h-full w-full" ref={mapContainerRef}></div>
-      <div 
-        id="event-list" 
-        ref={dragRef}
-        className="w-full bg-white absolute bottom-24 left-0 rounded-t-3xl shadow-top overflow-hidden"
-        style={{ 
-          height: `${drawerHeight}px`,
-          transition: isDragging ? 'none' : 'height 0.3s ease-out'
-        }}
-      >
-        <div 
-          className="flex justify-center py-2 cursor-grab active:cursor-grabbing"
-          onMouseDown={handleDragStart}
-          onTouchStart={handleDragStart}
-        >
-          <div className="w-12 h-1.5 bg-gray-300 rounded-full"></div>
-        </div>
-        <div className={`overflow-y-auto p-4`} style={{ height: `${drawerHeight - 20}px` }}>
-          <ContentController 
-            activeTab={activeTab} 
-            setActiveTab={setActiveTab} 
-            events={events} 
-            activeEventId={activeEventId} 
-            handleEventClick={handleEventClick}
-            userId={user.id}
-          />
-        </div>
-      </div>
-      <Navbar setActiveTab={setActiveTab} activeTab={activeTab} />
+      <EventCard event={events.find(event => event.id === activeEventId)} /> 
+
+
     </div>
   );
 }

@@ -4,11 +4,10 @@ import {useMemo} from 'react';
 
 interface EventDetailsProps {
   event: Event;
-  setActiveTab: (tab: string) => void;
   userId: number;
 }
 
-const EventDetails = ({event, setActiveTab, userId}: EventDetailsProps) => {
+const EventDetails = ({event, userId}: EventDetailsProps) => {
 
   const eventStatus = useMemo(() => event.requests.find(request => request.user.id === userId)?.status, [event, userId]);
   const requestToJoinEvent = async () => {
@@ -38,7 +37,7 @@ const EventDetails = ({event, setActiveTab, userId}: EventDetailsProps) => {
         <button className="bg-blue-400 rounded-lg p-2 text-sm cursor-pointer hover:bg-blue-500 hover:scale-110 transition-all" onClick={() => setActiveTab("events")}>Close</button>
       </div>
       <h2 className="text-xl font-display mb-4">{event.name}</h2>
-      <p className="mb-2">Time Remaining: 2 hours</p>
+      <p className="mb-2">Started {Math.round((new Date().getTime() - event.startTime.getTime()) / (1000 * 60))  } minutes ago</p>
       <div className="rounded-lg bg-blue-100 p-4">
         <p className="mb-2">{event.description}</p>
       </div>
