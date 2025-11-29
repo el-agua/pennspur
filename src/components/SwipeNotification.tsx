@@ -1,4 +1,9 @@
-import { motion, useMotionValue, useTransform, useAnimationControls } from "framer-motion";
+import {
+  motion,
+  useMotionValue,
+  useTransform,
+  useAnimationControls,
+} from "framer-motion";
 import { useState, useEffect } from "react";
 import SwipeIcon from "@mui/icons-material/Swipe";
 
@@ -27,14 +32,14 @@ const SwipeNotification = ({ children, onAccept, onDeny }: Props) => {
       transition: {
         duration: 2,
         ease: "easeInOut",
-        repeat: Infinity,   // LOOP FOREVER
+        repeat: Infinity, // LOOP FOREVER
       },
     });
   }, []);
 
   const handleDragStart = () => {
-    setCursorVisible(false);      
-    cursorControls.stop();        
+    setCursorVisible(false);
+    cursorControls.stop();
   };
 
   return (

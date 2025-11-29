@@ -18,17 +18,13 @@ export interface Notification {
   component: React.ReactNode;
 }
 
-
 export interface EventRequest {
-  status: 'pending' | 'accepted' | 'rejected';
+  status: "pending" | "accepted" | "rejected";
   user: User;
   event_id: number;
 }
-
 
 export interface User {
   id: number;
   username: string;
 }
-
-

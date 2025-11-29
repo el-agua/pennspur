@@ -29,7 +29,8 @@ const LoginPage = () => {
 
   return (
     <div className="h-screen w-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100 relative">
-      <div className="
+      <div
+        className="
         w-[90%] max-w-md
         bg-white/70 
         backdrop-blur-xl 
@@ -38,7 +39,8 @@ const LoginPage = () => {
         shadow-xl 
         px-8 py-10
         flex flex-col gap-6
-      ">
+      "
+      >
         <h1 className="text-2xl font-semibold text-gray-800 text-center">
           Welcome Back
         </h1>

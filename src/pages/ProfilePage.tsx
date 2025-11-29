@@ -1,40 +1,40 @@
-import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router';
-import supabase from '../services/service';
-import type { User } from '../types/general';
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router";
+import supabase from "../services/service";
+import type { User } from "../types/general";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 
 const ProfilePage = () => {
-  const [user, setUser] = useState<User>({ id: -1, username: '' });
+  const [user, setUser] = useState<User>({ id: -1, username: "" });
   const [stats, setStats] = useState({ hosted: 0, joined: 0 });
   const navigate = useNavigate();
 
   useEffect(() => {
-    const username = sessionStorage.getItem('auth_user');
-    const password = sessionStorage.getItem('auth_password');
+    const username = sessionStorage.getItem("auth_user");
+    const password = sessionStorage.getItem("auth_password");
     if (!username || !password) {
-      navigate('/login');
+      navigate("/login");
       return;
     }
 
     // Get user info
     supabase
-      .from('users')
-      .select('*')
-      .eq('username', username)
-      .eq('password', password)
+      .from("users")
+      .select("*")
+      .eq("username", username)
+      .eq("password", password)
       .then(({ data, error }) => {
         if (data && data.length > 0) {
           const tempUser = data[0];
           setUser({ id: tempUser.id, username: tempUser.username });
         } else {
-          navigate('/login');
+          navigate("/login");
         }
       });
 
     supabase
-      .from('events')
-      .select('id, host_id')
+      .from("events")
+      .select("id, host_id")
       .then(({ data }) => {
         if (data) {
           const hostedCount = data.filter((e) => e.host_id === user.id).length;
@@ -43,20 +43,23 @@ const ProfilePage = () => {
       });
 
     supabase
-      .from('event_requests')
-      .select('*')
-      .eq('user_id', user.id)
+      .from("event_requests")
+      .select("*")
+      .eq("user_id", user.id)
       .then(({ data }) => {
         if (data) {
-          setStats((prev) => ({ ...prev, joined: data.filter((r) => r.status === 'accepted').length }));
+          setStats((prev) => ({
+            ...prev,
+            joined: data.filter((r) => r.status === "accepted").length,
+          }));
         }
       });
   }, [navigate, user.id]);
 
   const handleLogout = () => {
-    sessionStorage.removeItem('auth_user');
-    sessionStorage.removeItem('auth_password');
-    navigate('/login');
+    sessionStorage.removeItem("auth_user");
+    sessionStorage.removeItem("auth_password");
+    navigate("/login");
   };
 
   return (

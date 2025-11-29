@@ -8,35 +8,38 @@ interface NotificationControllerProps {
   setCleared: (cleared: boolean) => void;
 }
 
-
-const NotificationController = ({ queue, setCleared}: NotificationControllerProps) => {
-
+const NotificationController = ({
+  queue,
+  setCleared,
+}: NotificationControllerProps) => {
   const acceptRequest = async (key: string) => {
-
-    
-    await supabase.from('event_requests').update({status: 'accepted'}).eq(
-     "event_id", key.split("-")[0] 
-    ).eq("user_id", key.split("-")[1]);
+    await supabase
+      .from("event_requests")
+      .update({ status: "accepted" })
+      .eq("event_id", key.split("-")[0])
+      .eq("user_id", key.split("-")[1]);
     await dismiss(key);
     console.log(`Accepted notification with key: ${key}`);
-  }
+  };
 
   const denyRequest = async (key: string) => {
-    await supabase.from('event_requests').update({status: 'rejected'}).eq(
-     "event_id", key.split("-")[0] 
-    ).eq("user_id", key.split("-")[1]);
+    await supabase
+      .from("event_requests")
+      .update({ status: "rejected" })
+      .eq("event_id", key.split("-")[0])
+      .eq("user_id", key.split("-")[1]);
     await dismiss(key);
     console.log(`Denied notification with key: ${key}`);
-  }
+  };
 
-  const [item, setItem] = useState<Notification | null >(null);
+  const [item, setItem] = useState<Notification | null>(null);
   console.log(queue);
 
   const [ack, setAck] = useState<string[]>([]);
 
   const dismiss = async (key: string) => {
     setAck((prev) => [...prev, key]);
-  }
+  };
 
   useEffect(() => {
     if (ack.length === queue.length && queue.length > 0) {
@@ -44,17 +47,15 @@ const NotificationController = ({ queue, setCleared}: NotificationControllerProp
     }
   }, [ack, queue, setCleared]);
 
-
-
   useEffect(() => {
-    setItem(queue.find((item: Notification) => !ack.includes(item.key))??null);
+    setItem(
+      queue.find((item: Notification) => !ack.includes(item.key)) ?? null,
+    );
   }, [queue, ack]);
 
   console.log(item);
 
-
-  return (
-    item ? (
+  return item ? (
     <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[200] w-[90%] max-w-md">
       <SwipeNotification
         key={item.key}
@@ -64,10 +65,9 @@ const NotificationController = ({ queue, setCleared}: NotificationControllerProp
         {item.component}
       </SwipeNotification>
     </div>
-    ) : <div></div>
+  ) : (
+    <div></div>
   );
 };
 
 export default NotificationController;
-
-
