@@ -3,6 +3,10 @@
   width: 100%;
   /* temporarily set the background color so we can tell where the map container is positioned */
   background-color: black;
+
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+
 }
 
 .shadow-top {

@@ -15,20 +15,44 @@ const MAPBOX_TOKEN = "pk.eyJ1IjoiZHl6aGFvNzM3OSIsImEiOiJjbTEybWdwY3QwYzd2Mmlvamd
 
 const EMOJI_OPTIONS = ['🎉', '🎈', '🎤', '🍕', '☕', '🎵', '🏞️', '🎓', '🎨', '🚀'];
 
+const UNIVERSITY_CITY_UPENN = { lat: 39.9522, lng: -75.1932 };
+
 const CreateEvent = () => {
   const [user, setUser] = useState<User>({id: -1, username: ''});
+  const offset = new Date().getTimezoneOffset();
+
+  const getLocalDateTimeString = () => {
+  const now = new Date();
+  now.setSeconds(0, 0); // Inputs don't show seconds
+
+  const local = new Date(now.getTime() - offset * 60000);
+  return local.toISOString().slice(0, 16);
+};
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    latitude: '',
-    longitude: '',
-    emoji: EMOJI_OPTIONS[0], 
+    latitude: UNIVERSITY_CITY_UPENN.lat.toString(),
+    longitude: UNIVERSITY_CITY_UPENN.lng.toString(),
+    emoji: EMOJI_OPTIONS[0],
+    // Default is now
+    start_time: getLocalDateTimeString(), 
   });
+
+
   
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [locationName, setLocationName] = useState('');
+
+  useEffect(() => {
+    if (formData.latitude && formData.longitude) {
+      reverseGeocode(parseFloat(formData.latitude), parseFloat(formData.longitude))
+        .then(name => setLocationName(name));
+    } else {
+      setLocationName('');
+    }
+  }, []);
   
   // Controls view: Form (false) vs. Map Picker (true)
   const [openMap, setOpenMap] = useState(false); 
@@ -142,9 +166,8 @@ const CreateEvent = () => {
     setLoading(true);
     setError('');
 
-    if (!formData.title.trim() || !formData.latitude || !formData.emoji) {
-      setError('Title, Location, and Icon are required');
-      setLoading(false);
+if (!formData.title.trim() || !formData.latitude || !formData.emoji || !formData.start_time) {
+  setError('Title, Location, Start Time, and Icon are required');      setLoading(false);
       return;
     }
     const lat = parseFloat(formData.latitude);
@@ -160,21 +183,14 @@ const CreateEvent = () => {
             longitude: lng,
             host_id: user.id,
             emoji: formData.emoji,
-            place: locationName
+            place: locationName,
+            start_time: new Date(new Date(formData.start_time).getTime()),
           }])
         .select();
 
       if (error) throw error;
 
       setSuccess('Event created successfully!');
-      setFormData({ 
-        title: '', 
-        description: '', 
-        latitude: '', 
-        longitude: '',
-        emoji: EMOJI_OPTIONS[0]
-      });
-      setCurrentEmojiIndex(0); 
 
       setTimeout(() => {
         navigate('/');
@@ -272,12 +288,11 @@ const CreateEvent = () => {
                         </div>
                     </div>
 
-                    {/* Emoji Picker Modal */}
                     {showEmojiPicker && (
                         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
                             <div className="relative bg-white/90 backdrop-blur-lg rounded-3xl shadow-2xl p-6 w-full max-w-sm">
                                 <h3 className="text-xl font-bold mb-4 text-gray-800">Choose an Emoji</h3>
-                                <div className="grid grid-cols-5 gap-3 max-h-64 overflow-y-auto pr-2">
+                                <div className="grid grid-cols-5 gap-3 max-h-72 overflow-y-auto p-2">
                                     {EMOJI_OPTIONS.map((emoji, index) => (
                                         <button
                                             type="button"
@@ -298,7 +313,7 @@ const CreateEvent = () => {
                                 <button
                                     onClick={() => setShowEmojiPicker(false)}
                                     className="absolute top-4 right-4 text-gray-600 hover:text-gray-900 transition"
-                                    aria-label="Close emoji picker"
+                                    aria-label="Close picker"
                                 >
                                     <CloseIcon />
                                 </button>
@@ -335,6 +350,21 @@ const CreateEvent = () => {
                                     bg-white/90 backdrop-blur-sm shadow-inner focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50"
                         />
                     </label>
+
+                    <label className="block mb-4">
+    <span className="text-gray-700 font-medium">Start Time</span>
+    <input
+        type="datetime-local"
+        name="start_time"
+        value={formData.start_time}
+        onChange={handleChange}
+        required
+        disabled={loading}
+        className="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-xl 
+                   bg-white/90 backdrop-blur-sm shadow-inner focus:ring-blue-500 
+                   focus:border-blue-500 disabled:opacity-50"
+    />
+</label>
                     
                     <div className="mb-6">
                         <button 
@@ -355,6 +385,8 @@ const CreateEvent = () => {
                               : "Select Location on Map"}
                         </button>                    
                     </div>
+                      
+
 
                     <div className="flex gap-4 mt-6">
                         <button

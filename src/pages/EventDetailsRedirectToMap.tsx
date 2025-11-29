@@ -130,10 +130,9 @@ const EventDetails = () => {
   const pending = event?.requests.filter((r) => r.status === 'pending') || [];
   const rejected = event?.requests.filter((r) => r.status === 'rejected') || [];
 
-
-
-
   const isHost = user.id === event?.userId;
+
+
 
   if (!event) return <div className="p-8 text-center text-gray-600">Event not found.</div>;
 
@@ -152,7 +151,7 @@ const EventDetails = () => {
   return (
     <div className="relative flex flex-col items-center p-6 min-h-screen bg-gradient-to-b from-blue-50 to-white">
       <button
-        onClick={() => navigate('/events')}
+        onClick={() => navigate('/')}
         className="absolute right-4 top-4 bg-white/70 backdrop-blur-md px-4 py-2 rounded-xl shadow-md border border-gray-200 hover:scale-105 transition"
       >
         Close
@@ -165,13 +164,13 @@ const EventDetails = () => {
           </div>
         )}
 
-        {/* Header */}
         <div className="flex items-center gap-4">
           <div className="text-4xl">{event.emoji ?? '🎉'}</div>
           <div>
             <h2 className="text-2xl font-semibold text-gray-800">{event.name}</h2>
             <p className="text-gray-500 text-sm">
-              Hosted by <span className="text-blue-500 font-medium">{isHost ? "me" : event.user}</span>
+              Hosted by <span className="text-blue-500 font-medium">{isHost ? "me"
+              : event.user}</span>
             </p>
           </div>
         </div>
@@ -179,7 +178,7 @@ const EventDetails = () => {
         {event.place && <p className="mt-2 text-gray-700 text-sm">📍 {event.place}</p>}
 
         <p className="mt-3 text-gray-600 text-sm">
-          {timeMessage()} 
+          {timeMessage()}
         </p>
 
         <div className="mt-4 p-4 rounded-xl bg-blue-50/60 border border-blue-100">
@@ -201,7 +200,6 @@ const EventDetails = () => {
         <div className="mt-10">
           <h3 className="text-lg font-semibold text-gray-800 mb-3">Attendees</h3>
 
-          {/* Accepted - visible to everyone */}
           <div>
             <h4 className="font-medium text-green-700 mb-1">Accepted</h4>
             <div className="space-y-2">
@@ -214,7 +212,6 @@ const EventDetails = () => {
             </div>
           </div>
 
-          {/* Pending & Rejected - only visible to host */}
           {isHost && (
             <>
               <div className="mt-6">

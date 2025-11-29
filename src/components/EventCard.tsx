@@ -18,7 +18,7 @@ export default function EventCard({ event } : EventCardProps) {
     const minutes = date.getMinutes().toString().padStart(2, '0');
 
     if (date.getHours() >= 12) {
-      return `${hours}:${minutes} PM`;
+      return `${parseInt(hours)-12}:${minutes} PM`;
     } else {
       return `${hours}:${minutes} AM`;
     }
@@ -55,7 +55,7 @@ export default function EventCard({ event } : EventCardProps) {
       </div>
 
       <button
-        onClick={() => navigate(`/event/${event.id}`)}
+        onClick={() => navigate(`/events/map/${event.id}`)}
         className="
           px-3 py-1.5
           rounded-xl

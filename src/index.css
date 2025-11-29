@@ -20,9 +20,16 @@ html, body, #root {
   background: transparent !important;
   border: none !important;
   box-shadow: none !important;
-  padding: 0 !important; /* your Tailwind p-3 handles padding */
+  padding: 0 !important; 
 }
 
 .mapboxgl-popup-tip {
-  display: none !important; /* removes the arrow */
+  display: none !important; 
+}
+
+.mapboxgl-popup-close-button {
+  padding: 6px !important;  
+  border-radius: 6px !important;
+  right: 6px !important;  
+  top: 6px !important;
 }

@@ -22,6 +22,7 @@ function HomePage() {
   const [activeEventId, setActiveEventId] = useState<number | null>(null);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [searchQuery, setSearchQuery] = useState<string>('');
+  const [cleared, setCleared] = useState<boolean>(false);
 
   const [user, setUser] = useState<User>({id: -1, username: ''});
   const [events, setEvents] = useState<Event[]>([]);
@@ -63,6 +64,8 @@ function HomePage() {
     created_at,
     place,
     emoji,
+    start_time,
+    active,
     host:host_id ( id, username ),
     event_attendees (
       user_id,
@@ -73,7 +76,7 @@ function HomePage() {
       status,
       user:users ( id, username )
     )
-  `).then(({ data, error }) => {
+  `).eq("active", true).then(({ data, error }) => {
       if (error) {
         console.error("Error fetching events:", error);
       } else {
@@ -88,7 +91,7 @@ function HomePage() {
             lat: item.latitude,
             lng: item.longitude
           },
-          startTime: new Date(item.created_at),
+          startTime: new Date(item.start_time), 
           requests: item.event_requests.map((req) => ({
             event_id: item.id,
             status: req.status,
@@ -134,8 +137,7 @@ function HomePage() {
 
 
   useEffect(() => {
-    if (!locationFetched || mapRef.current) return;
-
+ 
     mapboxgl.accessToken = "pk.eyJ1IjoiZHl6aGFvNzM3OSIsImEiOiJjbTEybWdwY3QwYzd2MmlvamdyMTZ6Z2p0In0.bBlKaVU-2ZO7gWdv1UHdEg";
     
     mapRef.current = new mapboxgl.Map({
@@ -144,6 +146,8 @@ function HomePage() {
       zoom: 14,
       style: 'mapbox://styles/mapbox/streets-v12'
     });
+
+
 
     const wrapper = document.createElement("div");
     const el = document.createElement('div');
@@ -182,13 +186,13 @@ function HomePage() {
     const wrapper = document.createElement("div");
     const el = document.createElement('div');
     el.className = 'emoji-marker bounce rotate-2';
-    el.textContent = randomEmojis[event.id % randomEmojis.length];
+    el.textContent = event.emoji ? event.emoji : randomEmojis[Math.floor(Math.random() * randomEmojis.length)];
     wrapper.appendChild(el);
   const marker = new mapboxgl.Marker({element: wrapper, anchor: 'center'})
     .setLngLat([event.location.lng, event.location.lat])
     .setPopup(
       new mapboxgl.Popup({offset: 24}).setHTML(`
-        <div class="p-3 bg-white/70 backdrop-blur-md border border-white/30 shadow-lg rounded-xl">
+        <div class="p-3 bg-white/70 backdrop-blur-md border border-white/30 shadow-lg rounded-xl min-w-32">
           <h3 class="text-base font-semibold text-gray-800">${event.name}</h3>
           <p class="text-xs text-gray-600 mt-1">${event.description}</p>
         </div>
@@ -250,13 +254,40 @@ function HomePage() {
 
    return (
     <div id="container" className="h-screen w-screen relative">
-      <NotificationController queue={notifications} />
+      <NotificationController queue={notifications} setCleared={setCleared}/>
       <div className="absolute top-12 w-full px-4 z-[60] pointer-events-none">
+
+  {cleared || notifications.length === 0 ? (<input
+    placeholder="Search"
+    value={searchQuery}
+    onChange={(e) => setSearchQuery(e.target.value)}
+    className={`
+      w-full
+      pointer-events-auto
+      z-[99]
+      relative
+      rounded-xl
+      bg-white/80
+      backdrop-blur-md
+      shadow-lg
+      px-4
+      py-3
+      text-gray-800
+      placeholder-gray-400
+      border border-gray-200
+      focus:outline-none
+      focus:ring-2
+      focus:ring-blue-500
+      focus:border-transparent
+      transition
+    `}
+  />
+) : (
   <input
     placeholder="Search"
     value={searchQuery}
     onChange={(e) => setSearchQuery(e.target.value)}
-    className="
+    className={`
       mt-8
       w-full
       pointer-events-auto
@@ -276,10 +307,10 @@ function HomePage() {
       focus:ring-blue-500
       focus:border-transparent
       transition
-    "
-  />
+    `}
+  />)}
 </div>
-      
+
       <div id="map-container" className="h-full w-full" ref={mapContainerRef}></div>
       <EventCard event={events.find(event => event.id === activeEventId)} /> 
 

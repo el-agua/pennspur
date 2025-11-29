@@ -5,10 +5,11 @@ import supabase from "../services/service";
 
 interface NotificationControllerProps {
   queue: Array<Notification>;
+  setCleared: (cleared: boolean) => void;
 }
 
 
-const NotificationController = ({ queue }: NotificationControllerProps) => {
+const NotificationController = ({ queue, setCleared}: NotificationControllerProps) => {
 
   const acceptRequest = async (key: string) => {
 
@@ -33,8 +34,15 @@ const NotificationController = ({ queue }: NotificationControllerProps) => {
 
   const [ack, setAck] = useState<string[]>([]);
 
-  const dismiss = async (key: string) =>
+  const dismiss = async (key: string) => {
     setAck((prev) => [...prev, key]);
+  }
+
+  useEffect(() => {
+    if (ack.length === queue.length && queue.length > 0) {
+      setCleared(true);
+    }
+  }, [ack, queue, setCleared]);
 
 
 
