@@ -33,7 +33,7 @@ const EventDetails = () => {
         }
         if (error) {
           alert("Error during authentication:" + error);
-          navigate("/login");
+          navigate("/landing");
         }
       });
   }, []);
@@ -209,7 +209,6 @@ const EventDetails = () => {
           )}
         </div>
 
-        {/* Attendee Section */}
         <div className="mt-10">
           <h3 className="text-lg font-semibold text-gray-800 mb-3">
             Attendees

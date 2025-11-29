@@ -116,7 +116,7 @@ const CreateEvent = () => {
           setUser({ id: tempUser.id, username: tempUser.username });
         }
         if (error) {
-          navigate("/login");
+          navigate("/landing");
         }
       });
   }, []);
@@ -459,7 +459,6 @@ const CreateEvent = () => {
         </div>
       </div>
 
-      {/* === 3. INTERACTIVE MAP OVERLAY & FLOATING CONFIRMATION === */}
       {openMap && (
         <div className="fixed inset-0 z-[90]">
           <Map
@@ -469,17 +468,14 @@ const CreateEvent = () => {
             style={{ width: "100%", height: "100%" }}
             mapStyle="mapbox://styles/mapbox/streets-v11"
             mapboxAccessToken={MAPBOX_TOKEN}
-            // No onClick needed, location is set by center point
           >
             <NavigationControl position="bottom-right" />
           </Map>
 
-          {/* Central Marker over the Mapbox view (remains static) */}
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-full pointer-events-none z-50">
             <LocationOnIcon sx={{ fontSize: 40, color: "red" }} />
           </div>
 
-          {/* FLOATING CONFIRMATION FOOTER (Fixed over the map) */}
           <div className="fixed bottom-0 left-0 right-0 p-4 pb-20 z-[95] flex justify-center">
             <div className="w-full max-w-md bg-white/70 backdrop-blur-md rounded-xl p-4 shadow-xl border border-white/30">
               <div className="flex gap-4">

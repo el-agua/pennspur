@@ -1,10 +1,10 @@
-import HomeIcon from "@mui/icons-material/Home";
 import MapIcon from "@mui/icons-material/Map";
 import AddCircleIcon from "@mui/icons-material/AddCircle";
 import PersonIcon from "@mui/icons-material/Person";
 import EventIcon from "@mui/icons-material/Event";
+import GroupIcon from "@mui/icons-material/Group";
 import { useState, useEffect } from "react";
-import { Link, useLocation } from "react-router"; // ✅ must be react-router-dom
+import { Link, useLocation } from "react-router";
 
 interface NavButtonProps {
   activeTab: string;
@@ -20,7 +20,7 @@ const NavButton = ({ activeTab, id, name, icon, link }: NavButtonProps) => {
   return (
     <Link to={link}>
       <button
-        className={`flex flex-col items-center justify-center gap-1 px-4 py-2 rounded-2xl transition-all duration-200 ${
+        className={`flex flex-col items-center w-16 justify-center gap-1 px-4 py-4 rounded-2xl transition-all duration-200 ${
           isActive
             ? "text-blue-500 scale-110"
             : "text-gray-600 hover:text-blue-500 hover:backdrop-blur-sm"
@@ -37,7 +37,7 @@ const NavButton = ({ activeTab, id, name, icon, link }: NavButtonProps) => {
 
 const Navbar = () => {
   const location = useLocation();
-  const VALID_TABS = ["", "events", "create", "profile"];
+  const VALID_TABS = ["", "events", "create", "profile", "groups"];
   const [activeTab, setActiveTab] = useState<string>("");
 
   useEffect(() => {
@@ -50,7 +50,7 @@ const Navbar = () => {
     VALID_TABS.includes(activeTab) && (
       <div
         id="navigation-buttons"
-        className="fixed bottom-4 left-4 right-4 h-20 flex items-center justify-around 
+        className="fixed bottom-4 left-4 right-4 h-20 flex items-center justify-center 
                    px-6 bg-white/70 backdrop-blur-md rounded-3xl border border-white/30 shadow-lg z-50"
       >
         <NavButton
@@ -71,7 +71,7 @@ const Navbar = () => {
           activeTab={activeTab}
           id="create"
           name="Create"
-          icon={<AddCircleIcon sx={{ fontSize: 32 }} />}
+          icon={<AddCircleIcon />}
           link="/create"
         />
         <NavButton
@@ -80,6 +80,13 @@ const Navbar = () => {
           name="Profile"
           icon={<PersonIcon />}
           link="/profile"
+        />
+        <NavButton
+          activeTab={activeTab}
+          id="groups"
+          name="Groups"
+          icon={<GroupIcon />}
+          link="/groups"
         />
       </div>
     )

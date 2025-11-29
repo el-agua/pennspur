@@ -29,15 +29,22 @@ function HomePage() {
   const [user, setUser] = useState<User>({ id: -1, username: "" });
   const [events, setEvents] = useState<Event[]>([]);
 
+  const [groups, setGroups] = useState<
+    { id: number; name: string; user_id: number }[]
+  >([]);
+  const [selectedGroupIds, setSelectedGroupIds] = useState<number[]>([]);
+
   const navigate = useNavigate();
 
+  //Auth
   useEffect(() => {
     const username = sessionStorage.getItem("auth_user");
     const password = sessionStorage.getItem("auth_password");
     if (!username || !password) {
-      navigate("/login");
+      navigate("/landing");
       return;
     }
+
     supabase
       .from("users")
       .select("*")
@@ -61,55 +68,41 @@ function HomePage() {
       .from("events")
       .select(
         `
-    id,
-    title,
-    description,
-    latitude,
-    longitude,
-    created_at,
-    place,
-    emoji,
-    start_time,
-    active,
-    host:host_id ( id, username ),
-    event_attendees (
-      user_id,
-      user:users ( id, username )
-    ),
-    event_requests (
-      user_id,
-      status,
-      user:users ( id, username )
-    )
-  `,
+        id,
+        title,
+        description,
+        latitude,
+        longitude,
+        created_at,
+        place,
+        emoji,
+        start_time,
+        active,
+        host:host_id (id, username),
+        event_attendees (user_id, user:users (id, username)),
+        event_requests (user_id, status, user:users (id, username))
+      `,
       )
       .eq("active", true)
       .then(({ data, error }) => {
         if (error) {
           console.error("Error fetching events:", error);
         } else {
-          console.log("Fetched events:", data);
           setEvents(
             data!.map((item) => ({
               id: item.id,
               name: item.title,
               // @ts-ignore
               user: item.host.username,
+              // @ts-ignore
+              user_id: item.host.id,
               description: item.description,
-              location: {
-                lat: item.latitude,
-                lng: item.longitude,
-              },
+              location: { lat: item.latitude, lng: item.longitude },
               startTime: new Date(item.start_time),
               requests: item.event_requests.map((req) => ({
                 event_id: item.id,
                 status: req.status,
-                user: {
-                  // @ts-ignore
-                  id: req.user.id,
-                  // @ts-ignore
-                  username: req.user.username,
-                },
+                user: { id: req.user.id, username: req.user.username },
               })),
               place: item.place,
               emoji: item.emoji,
@@ -120,6 +113,28 @@ function HomePage() {
   }, []);
 
   useEffect(() => {
+    if (user.id === -1) return;
+
+    supabase
+      .from("groups")
+      .select("user_id, id, name, group_user(user_id)")
+      .eq("user_id", user.id)
+      .then(({ data, error }) => {
+        if (!error && data) {
+          console.log(data);
+          setGroups(
+            data.map((row) => ({
+              id: row.id,
+              name: row.name,
+              user_id: row.user_id,
+              members: row.group_user.map((gu: any) => gu.user_id),
+            })),
+          );
+        }
+      });
+  }, [user]);
+
+  useEffect(() => {
     const notificationsTemp: Notification[] = [];
     events.forEach((event) => {
       if (event.user === user.username) {
@@ -127,23 +142,20 @@ function HomePage() {
           (request) => request.status === "pending",
         );
         pendingRequests.forEach((request) => {
-          const notif: Notification = Object.assign(
-            {},
-            {
-              key: `${event.id}-${request.user.id}`,
-              component: (
-                <div className="flex justify-center">
-                  <p className="text-sm">
-                    <strong className="text-blue-400">
-                      {request.user.username}
-                    </strong>{" "}
-                    has requested to join{" "}
-                    <strong className="text-blue-400">{event.name}</strong>
-                  </p>
-                </div>
-              ),
-            },
-          );
+          const notif: Notification = {
+            key: `${event.id}-${request.user.id}`,
+            component: (
+              <div className="flex justify-center">
+                <p className="text-sm">
+                  <strong className="text-blue-400">
+                    {request.user.username}
+                  </strong>{" "}
+                  has requested to join{" "}
+                  <strong className="text-blue-400">{event.name}</strong>
+                </p>
+              </div>
+            ),
+          };
           notificationsTemp.push(notif);
         });
       }
@@ -151,9 +163,27 @@ function HomePage() {
     setNotifications(notificationsTemp);
   }, [events, user]);
 
-  useEffect(() => {
-    getUserLocation();
-  }, []);
+  useEffect(() => getUserLocation(), []);
+
+  const getUserLocation = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setUserLocation({
+            lat: position.coords.latitude,
+            lng: position.coords.longitude,
+          });
+          setLocationFetched(true);
+        },
+        (error) => {
+          console.error("Error getting location:", error);
+          setLocationFetched(true);
+        },
+      );
+    } else {
+      setLocationFetched(true);
+    }
+  };
 
   useEffect(() => {
     mapboxgl.accessToken =
@@ -182,22 +212,27 @@ function HomePage() {
     };
   }, [locationFetched, userLocation]);
 
+  const filteredEvents = events.filter((event) => {
+    const matchesSearch =
+      event.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      event.description.toLowerCase().includes(searchQuery.toLowerCase());
+
+    const matchesGroup =
+      selectedGroupIds.length === 0 ||
+      groups
+        .filter((g) => selectedGroupIds.includes(g.id))
+        .some((g) => g.members && g.members.includes(event.user_id));
+
+    return matchesSearch && matchesGroup;
+  });
+
   useEffect(() => {
     if (!mapRef.current) return;
 
-    // Remove old markers
-    Object.values(markersRef.current).forEach((marker: any) => marker.remove());
+    Object.values(markersRef.current).forEach((m) => m.remove());
     markersRef.current = {};
 
-    const filteredEvents = events.filter(
-      (event) =>
-        event.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        event.description.toLowerCase().includes(searchQuery.toLowerCase()),
-    );
-
     const randomEmojis = ["🎉", "🎊", "🥳", "🎈", "🍾", "✨"];
-
-    // Add new markers
 
     filteredEvents.forEach((event) => {
       const wrapper = document.createElement("div");
@@ -207,15 +242,16 @@ function HomePage() {
         ? event.emoji
         : randomEmojis[Math.floor(Math.random() * randomEmojis.length)];
       wrapper.appendChild(el);
+
       const marker = new mapboxgl.Marker({ element: wrapper, anchor: "center" })
         .setLngLat([event.location.lng, event.location.lat])
         .setPopup(
           new mapboxgl.Popup({ offset: 24 }).setHTML(`
-        <div class="p-3 bg-white/70 backdrop-blur-md border border-white/30 shadow-lg rounded-xl min-w-32">
-          <h3 class="text-base font-semibold text-gray-800">${event.name}</h3>
-          <p class="text-xs text-gray-600 mt-1">${event.description}</p>
-        </div>
-      `),
+            <div class="p-3 bg-white/70 backdrop-blur-md border border-white/30 shadow-lg rounded-xl min-w-32">
+              <h3 class="text-base font-semibold text-gray-800">${event.name}</h3>
+              <p class="text-xs text-gray-600 mt-1">${event.description}</p>
+            </div>
+          `),
         )
         .addTo(mapRef.current);
 
@@ -225,11 +261,13 @@ function HomePage() {
         setActiveEventId(event.id);
       });
     });
-  }, [events, searchQuery]);
+  }, [filteredEvents]);
 
   useEffect(() => {
     if (activeEventId !== null && mapRef.current) {
-      const activeEvent = events.find((event) => event.id === activeEventId);
+      const activeEvent = filteredEvents.find(
+        (event) => event.id === activeEventId,
+      );
       const marker = markersRef.current[activeEventId];
 
       Object.entries(markersRef.current).forEach(([id, m]) => {
@@ -248,86 +286,54 @@ function HomePage() {
         marker.togglePopup();
       }
     }
-  }, [activeEventId, events]);
-
-  const getUserLocation = () => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const lat = position.coords.latitude;
-          const lng = position.coords.longitude;
-          setUserLocation({ lat, lng });
-          setLocationFetched(true);
-        },
-        (error) => {
-          console.error("Error getting location:", error);
-          setLocationFetched(true);
-        },
-      );
-    } else {
-      alert("Geolocation is not supported by this browser.");
-      setLocationFetched(true);
-    }
-  };
+  }, [activeEventId, filteredEvents]);
 
   return (
     <div id="container" className="h-screen w-screen relative">
       <NotificationController queue={notifications} setCleared={setCleared} />
+
       <div className="absolute top-12 w-full px-4 z-[60] pointer-events-none">
         {cleared || notifications.length === 0 ? (
           <input
             placeholder="Search"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className={`
-      w-full
-      pointer-events-auto
-      z-[99]
-      relative
-      rounded-xl
-      bg-white/80
-      backdrop-blur-md
-      shadow-lg
-      px-4
-      py-3
-      text-gray-800
-      placeholder-gray-400
-      border border-gray-200
-      focus:outline-none
-      focus:ring-2
-      focus:ring-blue-500
-      focus:border-transparent
-      transition
-    `}
+            className={`w-full pointer-events-auto z-[99] relative rounded-xl bg-white/80 backdrop-blur-md shadow-lg px-4 py-3 text-gray-800 placeholder-gray-400 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition`}
           />
         ) : (
           <input
             placeholder="Search"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className={`
-      mt-8
-      w-full
-      pointer-events-auto
-      z-[99]
-      relative
-      rounded-xl
-      bg-white/80
-      backdrop-blur-md
-      shadow-lg
-      px-4
-      py-3
-      text-gray-800
-      placeholder-gray-400
-      border border-gray-200
-      focus:outline-none
-      focus:ring-2
-      focus:ring-blue-500
-      focus:border-transparent
-      transition
-    `}
+            className={`mt-8 w-full pointer-events-auto z-[99] relative rounded-xl bg-white/80 backdrop-blur-md shadow-lg px-4 py-3 text-gray-800 placeholder-gray-400 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition`}
           />
         )}
+
+        <div className="mt-2 w-full z-[60] pointer-events-none">
+          <div className="flex flex-wrap gap-2 pointer-events-auto">
+            {groups.map((g) => {
+              const active = selectedGroupIds.includes(g.id);
+              return (
+                <button
+                  key={g.id}
+                  onClick={() =>
+                    setSelectedGroupIds((old) =>
+                      old.includes(g.id)
+                        ? old.filter((id) => id !== g.id)
+                        : [...old, g.id],
+                    )
+                  }
+                  className={`
+                  px-3 py-1 rounded-full text-sm transitionbackdrop-blur-md shadow-lg  
+                  ${active ? "bg-blue-500 text-white" : " bg-white/80  text-gray-700"}
+                `}
+                >
+                  {g.name}
+                </button>
+              );
+            })}
+          </div>
+        </div>
       </div>
 
       <div
@@ -335,6 +341,7 @@ function HomePage() {
         className="h-full w-full"
         ref={mapContainerRef}
       ></div>
+
       <EventCard event={events.find((event) => event.id === activeEventId)} />
     </div>
   );

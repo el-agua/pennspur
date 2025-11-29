@@ -8,12 +8,16 @@ import Navbar from "./components/Navbar";
 import EventPage from "./pages/EventsPage";
 import EventDetailsRedirectToMap from "./pages/EventDetailsRedirectToMap";
 import ProfilePage from "./pages/ProfilePage";
+import GroupsDetailsPage from "./pages/GroupDetailsPage";
+import GroupsPage from "./pages/GroupsPage";
+import LandingPage from "./pages/LandingPage";
 
 function App() {
   return (
     <div className="font-display">
       <BrowserRouter>
         <Routes>
+          <Route path="/landing" element={<LandingPage />} />
           <Route path="/" element={<HomePage />} />
           <Route
             path="/events/map/:eventId"
@@ -24,7 +28,9 @@ function App() {
           <Route path="/signup" element={<SignUpPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/create" element={<CreateEvent />} />
-          <Route path="profile" element={<ProfilePage />} />
+          <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/groups/:id" element={<GroupsDetailsPage />} />
+          <Route path="/groups" element={<GroupsPage />} />
           <Route path="*" element={<div>404 Not Found</div>} />
         </Routes>
         <Navbar></Navbar>

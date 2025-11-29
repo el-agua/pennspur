@@ -13,11 +13,10 @@ const ProfilePage = () => {
     const username = sessionStorage.getItem("auth_user");
     const password = sessionStorage.getItem("auth_password");
     if (!username || !password) {
-      navigate("/login");
+      navigate("/landing");
       return;
     }
 
-    // Get user info
     supabase
       .from("users")
       .select("*")

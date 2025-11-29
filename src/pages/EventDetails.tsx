@@ -33,7 +33,7 @@ const EventDetails = () => {
         }
         if (error) {
           alert("Error during authentication:" + error);
-          navigate("/login");
+          navigate("/landing");
         }
       });
   }, []);
@@ -234,7 +234,6 @@ const EventDetails = () => {
             </div>
           </div>
 
-          {/* Pending & Rejected - only visible to host */}
           {isHost && (
             <>
               <div className="mt-6">
