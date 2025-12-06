@@ -298,7 +298,7 @@ markerEl.addEventListener("click", () => {
   }, [activeEventId, filteredEvents]);
 
   return (
-   <div id="container" className="min-h-[100dvh] w-screen relative overflow-hidden">
+   <div id="container" className="h-[100dvh] w-screen relative overflow-hidden">
       <NotificationController queue={notifications} setCleared={setCleared} />
 
       <div className="absolute top-12 w-full px-4 z-[60] pointer-events-none">
