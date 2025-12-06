@@ -28,7 +28,7 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="h-screen w-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100 relative">
+    <div className="h-[100dvh] w-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100 relative">
       <div
         className="
         w-[90%] max-w-md

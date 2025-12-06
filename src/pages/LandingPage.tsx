@@ -4,7 +4,7 @@ const LandingPage = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen flex flex-col justify-center items-center bg-gradient-to-b from-blue-50 via-white to-blue-100">
+    <div className="min-h-[100dvh] flex flex-col justify-center items-center bg-gradient-to-b from-blue-50 via-white to-blue-100">
       <div className="text-center space-y-4">
         <h1 className="text-6xl font-bold text-blue-800">PennSpur</h1>
         <p className="text-l text-gray-700 max-w-xl mx-4">

@@ -124,7 +124,7 @@ const GroupDetailsPage = () => {
 
   if (loading) {
       return (
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-blue-50 to-white">
+        <div className="min-h-[100dvh] flex items-center justify-center bg-gradient-to-b from-blue-50 to-white">
           <div className="animate-spin h-10 w-10 border-4 border-blue-400 rounded-full border-t-transparent"></div>
         </div>
       );
@@ -138,7 +138,7 @@ const GroupDetailsPage = () => {
       >
         Back
       </button>
-      <div className="min-h-screen p-6 bg-gradient-to-b from-blue-50 to-white flex flex-col items-center">
+      <div className="min-h-[100dvh] p-6 bg-gradient-to-b from-blue-50 to-white flex flex-col items-center">
         <h1 className="text-3xl font-bold text-gray-800 mt-12">{groupName}</h1>
 
         <div className="mt-6 w-full max-w-md bg-white/70 backdrop-blur-md border border-white/30 p-4 rounded-xl shadow space-y-3 z-20">

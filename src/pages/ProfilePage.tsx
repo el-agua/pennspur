@@ -62,7 +62,7 @@ const ProfilePage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white flex justify-center items-start p-6">
+    <div className="min-h-[100dvh] bg-gradient-to-b from-blue-50 to-white flex justify-center items-start p-6">
       <div className="w-full max-w-md bg-white/70 backdrop-blur-xl rounded-2xl shadow-lg border border-white/30 p-6 mt-12">
         <h1 className="text-3xl font-bold text-gray-700 mb-6">Profile</h1>
 

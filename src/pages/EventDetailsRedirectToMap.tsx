@@ -11,6 +11,7 @@ const EventDetails = () => {
   const [user, setUser] = useState<User>({ id: -1, username: "" });
   const [events, setEvents] = useState<Event[]>([]);
   const [success, setSuccess] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(true);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -80,9 +81,9 @@ const EventDetails = () => {
             })),
           );
         }
+        setLoading(false);
       });
   }, []);
-
   const event = useMemo(
     () => events.find((ev) => ev.id === parseInt(eventId || "")),
     [events, eventId],
@@ -140,6 +141,14 @@ const EventDetails = () => {
 
   const isHost = user.id === event?.userId;
 
+   if (loading) {
+      return (
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-blue-50 to-white">
+          <div className="animate-spin h-10 w-10 border-4 border-blue-400 rounded-full border-t-transparent"></div>
+        </div>
+      );
+    }
+
   if (!event)
     return (
       <div className="p-8 text-center text-gray-600">Event not found.</div>
@@ -158,7 +167,7 @@ const EventDetails = () => {
   };
 
   return (
-    <div className="relative flex flex-col items-center p-6 min-h-screen bg-gradient-to-b from-blue-50 to-white">
+    <div className="relative flex flex-col items-center p-6 min-h-[100dvh] bg-gradient-to-b from-blue-50 to-white">
       <button
         onClick={() => navigate("/")}
         className="absolute right-4 top-4 bg-white/70 backdrop-blur-md px-4 py-2 rounded-xl shadow-md border border-gray-200 hover:scale-105 transition"

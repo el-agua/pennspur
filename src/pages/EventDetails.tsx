@@ -170,7 +170,7 @@ const EventDetails = () => {
  
 
   return (
-    <div className="relative flex flex-col items-center p-6 min-h-screen bg-gradient-to-b from-blue-50 to-white">
+    <div className="relative flex flex-col items-center p-6 min-h-[100dvh] bg-gradient-to-b from-blue-50 to-white">
       <button
         onClick={() => navigate("/events")}
         className="absolute right-4 top-4 bg-white/70 backdrop-blur-md px-4 py-2 rounded-xl shadow-md border border-gray-200 hover:scale-105 transition"

@@ -23,7 +23,7 @@ const SignUpPage = () => {
   const [password, setPassword] = useState("");
 
   return (
-    <div className="h-screen w-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100">
+    <div className="h-[100dvh] w-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100">
       <div
         className="
           w-[90%] max-w-md

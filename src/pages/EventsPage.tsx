@@ -173,14 +173,14 @@ const EventsPage = () => {
 
   if (loading) {
       return (
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-blue-50 to-white">
+        <div className="min-h-[100dvh] flex items-center justify-center bg-gradient-to-b from-blue-50 to-white">
           <div className="animate-spin h-10 w-10 border-4 border-blue-400 rounded-full border-t-transparent"></div>
         </div>
       );
     }
 
   return (
-    <div className="min-h-screen p-6 bg-gradient-to-b from-blue-50 to-white flex flex-col items-center">
+    <div className="min-h-[100dvh] p-6 bg-gradient-to-b from-blue-50 to-white flex flex-col items-center">
       <h1 className="text-3xl font-bold text-gray-800">Your Events</h1>
 
       <Section title="Active Events You're Hosting" data={hostingActive} />
