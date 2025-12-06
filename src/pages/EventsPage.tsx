@@ -118,7 +118,9 @@ const EventsPage = () => {
       .from("events")
       .update({ active: !ev.active })
       .eq("id", ev.id);
-    navigate(0);
+    setTimeout(() => {
+      navigate(0); // soft reload, safe in SPA
+    }, 50);
   };
 
   const Section = ({ title, data }) =>
