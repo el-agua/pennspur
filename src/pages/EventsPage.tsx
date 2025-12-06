@@ -32,7 +32,9 @@ const EventsPage = () => {
       });
   }, []);
 
-  useEffect(() => {
+  const fetchEvents = () => {
+
+    setLoading(true);
     supabase
       .from("events")
       .select(
@@ -83,6 +85,10 @@ const EventsPage = () => {
         );
         setLoading(false);
       });
+  }
+
+  useEffect(() => {
+    fetchEvents();
   }, []);
 
   const hostingActive = useMemo(() => {
@@ -118,9 +124,8 @@ const EventsPage = () => {
       .from("events")
       .update({ active: !ev.active })
       .eq("id", ev.id);
-    setTimeout(() => {
-      navigate(0); // soft reload, safe in SPA
-    }, 50);
+    fetchEvents();
+    
   };
 
   const Section = ({ title, data }) =>
