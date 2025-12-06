@@ -14,6 +14,7 @@ const GroupsPage = () => {
   const [user, setUser] = useState<User>({ id: -1, username: "" });
   const [groups, setGroups] = useState<Group[]>([]);
   const [newGroupName, setNewGroupName] = useState("");
+  const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
     const username = sessionStorage.getItem("auth_user");
@@ -46,6 +47,7 @@ const GroupsPage = () => {
       .eq("user_id", user.id)
       .then(({ data, error }) => {
         if (!error && data) setGroups(data);
+        setLoading(false);
       });
   }, [user]);
 
@@ -67,6 +69,14 @@ const GroupsPage = () => {
     await supabase.from("groups").delete().eq("id", groupId);
     setGroups((g) => g.filter((x) => x.id !== groupId));
   };
+
+  if (loading) {
+      return (
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-blue-50 to-white">
+          <div className="animate-spin h-10 w-10 border-4 border-blue-400 rounded-full border-t-transparent"></div>
+        </div>
+      );
+    }
 
   return (
     <div className="min-h-screen p-6 bg-gradient-to-b from-blue-50 to-white flex flex-col items-center">

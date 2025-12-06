@@ -18,6 +18,7 @@ const GroupDetailsPage = () => {
   const [allUsers, setAllUsers] = useState<Member[]>([]);
   const [nonMembers, setNonMembers] = useState<Member[]>([]);
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
 
   const [search, setSearch] = useState("");
   const [showDropdown, setShowDropdown] = useState(false);
@@ -51,7 +52,6 @@ const GroupDetailsPage = () => {
 
   // Load group details + members
   useEffect(() => {
-    console.log("HGELLO");
     if (!id) return;
 
     supabase
@@ -76,6 +76,7 @@ const GroupDetailsPage = () => {
       .select("id, username")
       .then(({ data }) => {
         console.log(data);
+        setLoading(false);
         if (data) setAllUsers(data);
       });
   }, [id]);
@@ -120,6 +121,14 @@ const GroupDetailsPage = () => {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  if (loading) {
+      return (
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-blue-50 to-white">
+          <div className="animate-spin h-10 w-10 border-4 border-blue-400 rounded-full border-t-transparent"></div>
+        </div>
+      );
+    }
 
   return (
     <>
