@@ -248,7 +248,7 @@ const CreateEvent = () => {
   const bottomPaddingClass = "pb-12";
 
   return (
-    <div className={`min-h-screen relative overflow-hidden`}>
+    <div className={`h-[100dvh] relative overflow-hidden`}>
       <div
         className={`absolute inset-0 transition-filter transition-transform duration-1000 ease-in-out ${
           !openMap ? "filter blur-lg scale-105" : "filter blur-none scale-100"
