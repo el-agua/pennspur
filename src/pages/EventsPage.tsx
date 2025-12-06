@@ -118,7 +118,7 @@ const EventsPage = () => {
       .from("events")
       .update({ active: !ev.active })
       .eq("id", ev.id);
-    window.location.reload();
+    navigate(0);
   };
 
   const Section = ({ title, data }) =>
