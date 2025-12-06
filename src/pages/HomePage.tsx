@@ -257,9 +257,18 @@ function HomePage() {
 
       markersRef.current[event.id] = marker;
 
-      marker.getElement().addEventListener("click", () => {
-        setActiveEventId(event.id);
-      });
+      const markerEl = marker.getElement();
+
+// For touchscreen: tap should behave like click
+markerEl.addEventListener("touchstart", (e) => {
+  e.preventDefault();        // stops hover state
+  markerEl.click();          // triggers the click stack
+});
+
+// Optional fallback if you want click too:
+markerEl.addEventListener("click", () => {
+  setActiveEventId(event.id);
+});
     });
   }, [filteredEvents]);
 

@@ -7,7 +7,7 @@ const LandingPage = () => {
     <div className="min-h-screen flex flex-col justify-center items-center bg-gradient-to-b from-blue-50 via-white to-blue-100">
       <div className="text-center space-y-4">
         <h1 className="text-6xl font-bold text-blue-800">PennSpur</h1>
-        <p className="text-l text-gray-700 max-w-xl mx-auto">
+        <p className="text-l text-gray-700 max-w-xl mx-4">
           Your gateway to connecting, sharing, and exploring events at Penn and
           beyond. Join the community today!
         </p>

@@ -245,7 +245,7 @@ const CreateEvent = () => {
     }
   };
 
-  const bottomPaddingClass = "pb-40";
+  const bottomPaddingClass = "pb-12";
 
   return (
     <div className={`min-h-screen relative overflow-hidden`}>
@@ -287,7 +287,7 @@ const CreateEvent = () => {
                          bg-white/70 backdrop-blur-md rounded-3xl 
                          border border-white/30 shadow-xl mx-4 sm:mx-0"
         >
-          <h1 className="text-3xl font-bold mb-6 text-gray-700">
+          <h1 className="text-2xl font-bold mb-2 text-gray-700">
             Create New Event
           </h1>
 
@@ -392,7 +392,7 @@ const CreateEvent = () => {
                 name="description"
                 value={formData.description}
                 onChange={handleChange}
-                rows={4}
+                rows={1}
                 disabled={loading}
                 placeholder="Details about the event..."
                 className="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-xl 

@@ -5,6 +5,8 @@
   cursor: pointer;
 }
 
+
+
 .pulse-marker::before {
   content: "";
   position: absolute;
@@ -79,5 +81,20 @@
   }
   50% {
     transform: translateY(-6px);
+  }
+}
+
+/* Disable hover activation behavior on touch */
+.emoji-marker, .pulse-marker {
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;  /* tell browser that tap = click */
+}
+
+@media (hover: none) {
+  .emoji-marker:hover,
+  .pulse-marker:hover {
+    transform: none !important;   /* prevent hover animation */
+    filter: none !important;
   }
 }

@@ -8,6 +8,7 @@ const EventsPage = () => {
 
   const [user, setUser] = useState<User>({ id: -1, username: "" });
   const [events, setEvents] = useState<Event[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
     const username = sessionStorage.getItem("auth_user");
@@ -56,7 +57,10 @@ const EventsPage = () => {
       )
       .eq("active", true)
       .then(({ data, error }) => {
-        if (error) return;
+        if (error) {
+          setLoading(false);
+          return;
+        };
         setEvents(
           data!.map((item) => ({
             active: item.active,
@@ -77,6 +81,7 @@ const EventsPage = () => {
             emoji: item.emoji,
           })),
         );
+        setLoading(false);
       });
   }, []);
 
@@ -165,6 +170,14 @@ const EventsPage = () => {
         </div>
       </div>
     );
+
+  if (loading) {
+      return (
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-blue-50 to-white">
+          <div className="animate-spin h-10 w-10 border-4 border-blue-400 rounded-full border-t-transparent"></div>
+        </div>
+      );
+    }
 
   return (
     <div className="min-h-screen p-6 bg-gradient-to-b from-blue-50 to-white flex flex-col items-center">
